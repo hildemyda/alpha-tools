@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Masuk — Qolase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0D1512; --ink-soft:#182420; --emerald:#10B981; --emerald-deep:#059669;
+    --text-light:#F1EEE7; --text-dim:#93A39B; --danger:#E15B4D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--ink); color:var(--text-light); font-family:'Inter',sans-serif;
+    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;
+  }
+  .card{
+    width:100%; max-width:360px; background:var(--ink-soft); border:1px solid #1E2E28;
+    border-radius:20px; padding:28px 24px;
+  }
+  .icon{
+    width:44px; height:44px; border-radius:13px; background:var(--emerald-deep);
+    display:flex; align-items:center; justify-content:center; margin-bottom:16px;
+  }
+  .icon svg{ width:24px; height:24px; color:#fff; }
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:20px; margin:0 0 6px; }
+  p{ color:var(--text-dim); font-size:13.5px; margin:0 0 20px; line-height:1.5; }
+  input{
+    width:100%; background:var(--ink); border:1px solid #243830; color:var(--text-light);
+    font-family:'Inter',sans-serif; font-size:15px; padding:13px 14px; border-radius:12px;
+    margin-bottom:12px; outline:none;
+  }
+  input:focus{ border-color:var(--emerald); }
+  button{
+    width:100%; background:var(--emerald-deep); color:#fff; border:none;
+    font-family:'Inter',sans-serif; font-size:15px; font-weight:600;
+    padding:13px 14px; border-radius:12px; cursor:pointer;
+  }
+  button:disabled{ opacity:0.6; }
+  .error{
+    color:var(--danger); font-size:13px; margin-top:10px; min-height:16px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h1>Masukkan Access Key</h1>
+    <p>Halaman ini dikunci. Masukkan key akses untuk membuka Qolase.</p>
+    <form id="loginForm">
+      <input type="password" id="keyInput" placeholder="Access key" autocomplete="off" required>
+      <button type="submit" id="submitBtn">Masuk</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const input = document.getElementById('keyInput');
+    const btn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Memeriksa...';
+      try {
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: input.value }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get('redirect') || '/';
+          window.location.href = redirect;
+        } else {
+          errorMsg.textContent = data.message || 'Key salah, coba lagi.';
+          btn.disabled = false;
+          btn.textContent = 'Masuk';
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Terjadi kesalahan, coba lagi.';
+        btn.disabled = false;
+        btn.textContent = 'Masuk';
+      }
+    });
+  </script>
+</body>
+</html>
