@@ -8,66 +8,169 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0D1512; --ink-soft:#182420; --emerald:#10B981; --emerald-deep:#059669;
+    --ink:#0D1512; --ink-soft:#182420; --ink-line:#1E2E28;
+    --emerald:#10B981; --emerald-deep:#059669;
     --text-light:#F1EEE7; --text-dim:#93A39B; --danger:#E15B4D;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;}
   body{
     background:var(--ink); color:var(--text-light); font-family:'Inter',sans-serif;
-    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;
+    min-height:100vh; position:relative; isolation:isolate;
   }
+
+  /* ---- Animated grid backdrop: always fills the viewport, never clipped
+     by content height or the browser chrome collapsing/expanding ---- */
+  .grid-bg{
+    position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(16,185,129,0.8) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16,185,129,0.8) 1px, transparent 1px);
+    background-size:42px 42px;
+    /* the lines themselves are near-invisible against --ink; the 0.8 alpha
+       above only matters once combined with this dim mix-blend + mask fade,
+       keeping the grid felt rather than seen */
+    opacity:0.055;
+    animation:gridDrift 26s linear infinite;
+  }
+  .grid-bg::after{
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 38%, transparent 0%, var(--ink) 78%);
+  }
+  @keyframes gridDrift{
+    from{ background-position:0 0, 0 0; }
+    to{ background-position:42px 42px, 42px 42px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .grid-bg{ animation:none; }
+  }
+
+  .scene{
+    width:100%; max-width:360px; margin:0 auto;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:32px 20px;
+  }
+
+  /* ---- Mark: the lock, on its own ---- */
+  .badge{
+    width:50px; height:50px; border-radius:14px; background:var(--emerald-deep);
+    display:flex; align-items:center; justify-content:center; margin-bottom:22px;
+    box-shadow:0 10px 22px -8px rgba(5,150,105,0.55);
+    opacity:0; transform:scale(0.85);
+    animation:pop 0.4s cubic-bezier(.2,.8,.3,1.15) forwards;
+  }
+  @keyframes pop{ to{ opacity:1; transform:scale(1); } }
+  .badge svg{ width:25px; height:25px; color:#fff; }
+  @media (prefers-reduced-motion: reduce){
+    .badge{ animation:none; opacity:1; transform:scale(1); }
+  }
+
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:21px; margin:0 0 7px; text-align:center; letter-spacing:0.01em; }
+  .sub{ color:var(--text-dim); font-size:13.5px; margin:0 0 24px; line-height:1.55; text-align:center; }
+
   .card{
-    width:100%; max-width:360px; background:var(--ink-soft); border:1px solid #1E2E28;
-    border-radius:20px; padding:28px 24px;
+    width:100%; background:var(--ink-soft); border:1px solid var(--ink-line);
+    border-radius:18px; padding:20px 20px 18px;
   }
-  .icon{
-    width:44px; height:44px; border-radius:13px; background:var(--emerald-deep);
-    display:flex; align-items:center; justify-content:center; margin-bottom:16px;
-  }
-  .icon svg{ width:24px; height:24px; color:#fff; }
-  h1{ font-family:'Space Grotesk',sans-serif; font-size:20px; margin:0 0 6px; }
-  p{ color:var(--text-dim); font-size:13.5px; margin:0 0 20px; line-height:1.5; }
+  .field{ position:relative; margin-bottom:12px; }
   input{
     width:100%; background:var(--ink); border:1px solid #243830; color:var(--text-light);
-    font-family:'Inter',sans-serif; font-size:15px; padding:13px 14px; border-radius:12px;
-    margin-bottom:12px; outline:none;
+    font-family:'Inter',sans-serif; font-size:15px; padding:13px 44px 13px 14px; border-radius:12px;
+    outline:none; transition:border-color 0.15s ease;
   }
   input:focus{ border-color:var(--emerald); }
-  button{
+  input.invalid{ border-color:var(--danger); }
+
+  .toggle-eye{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    width:32px; height:32px; border:none; background:transparent; color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:8px;
+  }
+  .toggle-eye:active{ background:rgba(255,255,255,0.06); }
+  .toggle-eye svg{ width:18px; height:18px; }
+
+  button.submit{
     width:100%; background:var(--emerald-deep); color:#fff; border:none;
     font-family:'Inter',sans-serif; font-size:15px; font-weight:600;
-    padding:13px 14px; border-radius:12px; cursor:pointer;
+    padding:13px 14px; border-radius:12px; cursor:pointer; transition:transform 0.1s ease, opacity 0.15s ease;
   }
-  button:disabled{ opacity:0.6; }
+  button.submit:active{ transform:scale(0.98); }
+  button.submit:disabled{ opacity:0.6; }
+
   .error{
-    color:var(--danger); font-size:13px; margin-top:10px; min-height:16px;
+    color:var(--danger); font-size:13px; margin-top:11px; min-height:16px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .error svg{ width:14px; height:14px; flex-shrink:0; display:none; }
+  .error.show svg{ display:block; }
+
+  .card.shake{ animation:shake 0.4s ease; }
+  @keyframes shake{
+    10%,90%{ transform:translateX(-1px); } 20%,80%{ transform:translateX(2px); }
+    30%,50%,70%{ transform:translateX(-4px); } 40%,60%{ transform:translateX(4px); }
   }
 </style>
 </head>
 <body>
-  <div class="card">
-    <div class="icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <div class="scene">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
-    <h1>Masukkan Access Key</h1>
-    <p>Halaman ini dikunci. Masukkan key akses untuk membuka Qolase.</p>
-    <form id="loginForm">
-      <input type="password" id="keyInput" placeholder="Access key" autocomplete="off" required>
-      <button type="submit" id="submitBtn">Masuk</button>
-      <div class="error" id="errorMsg"></div>
-    </form>
+
+    <h1>Buka Qolase</h1>
+    <p class="sub">Masukkan access key untuk mulai bikin kolase.</p>
+
+    <div class="card" id="card">
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <input type="password" id="keyInput" placeholder="Access key" autocomplete="off">
+          <button type="button" class="toggle-eye" id="toggleEye" aria-label="Tampilkan key">
+            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button type="submit" class="submit" id="submitBtn">Buka</button>
+        <div class="error" id="errorMsg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <span id="errorText"></span>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script>
     const form = document.getElementById('loginForm');
+    const card = document.getElementById('card');
     const input = document.getElementById('keyInput');
     const btn = document.getElementById('submitBtn');
     const errorMsg = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
+    const toggleEye = document.getElementById('toggleEye');
+
+    toggleEye.addEventListener('click', () => {
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      toggleEye.setAttribute('aria-label', showing ? 'Tampilkan key' : 'Sembunyikan key');
+      toggleEye.querySelector('svg').innerHTML = showing
+        ? '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>'
+        : '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a20.4 20.4 0 0 1-3.22 4.27M1 1l22 22"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>';
+    });
+
+    input.addEventListener('input', () => {
+      if (input.value.trim()) clearError();
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      errorMsg.textContent = '';
+
+      if (!input.value.trim()) {
+        showError('Access key belum diisi, isi dulu ya.');
+        input.focus();
+        return;
+      }
+
+      clearError();
       btn.disabled = true;
       btn.textContent = 'Memeriksa...';
       try {
@@ -78,20 +181,37 @@
         });
         const data = await res.json();
         if (data.ok) {
+          btn.textContent = 'Berhasil';
           const params = new URLSearchParams(window.location.search);
           const redirect = params.get('redirect') || '/';
           window.location.href = redirect;
         } else {
-          errorMsg.textContent = data.message || 'Key salah, coba lagi.';
+          showError(data.message || 'Key belum cocok, coba lagi.');
           btn.disabled = false;
-          btn.textContent = 'Masuk';
+          btn.textContent = 'Buka';
         }
       } catch (err) {
-        errorMsg.textContent = 'Terjadi kesalahan, coba lagi.';
+        showError('Terjadi kesalahan, coba lagi.');
         btn.disabled = false;
-        btn.textContent = 'Masuk';
+        btn.textContent = 'Buka';
       }
     });
+
+    function showError(message){
+      input.classList.add('invalid');
+      errorText.textContent = message;
+      errorMsg.classList.add('show');
+      card.classList.remove('shake');
+      void card.offsetWidth; // restart animation
+      card.classList.add('shake');
+      input.select();
+    }
+
+    function clearError(){
+      input.classList.remove('invalid');
+      errorText.textContent = '';
+      errorMsg.classList.remove('show');
+    }
   </script>
 </body>
 </html>
