@@ -1,8 +1,9 @@
 {
-  "name": "qolase",
+  "name": "alphools",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@vercel/functions": "^1.5.0"
+    "@vercel/functions": "^1.5.0",
+    "cheerio": "^1.0.0"
   }
 }
