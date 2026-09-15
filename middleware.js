@@ -2,9 +2,11 @@ import { next } from '@vercel/functions';
 import { redis } from './lib/redis.js';
 
 // Path yang LEWAT TANPA dicek sama sekali (halaman login itu sendiri + endpoint
-// buat login). Semua path lain wajib punya cookie yang valid sesuai jalurnya.
+// buat login + og-image.jpg, karena itu WAJIB bisa diakses publik biar WhatsApp/
+// Facebook/dll bisa narik gambarnya buat preview link, walau requester-nya gak
+// punya cookie akses). Semua path lain wajib punya cookie yang valid sesuai jalurnya.
 export const config = {
-  matcher: ['/((?!login\\.html|api/verify|admin/login\\.html|api/admin/login|favicon\\.ico).*)'],
+  matcher: ['/((?!login\\.html|api/verify|admin/login\\.html|api/admin/login|og-image\\.jpg|favicon\\.ico).*)'],
 };
 
 export default async function middleware(request) {
