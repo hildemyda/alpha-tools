@@ -10,7 +10,7 @@
 
 import * as cheerio from 'cheerio';
 import { getCookie } from '../lib/cookies.js';
-import { consumeQuota } from '../lib/store.js';
+import { consumeCredit } from '../lib/store.js';
 
 export default async function handler(req, res) {
   const { url } = req.query;
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   // Cek & potong limit DULU sebelum manggil scraper, biar link yang gagal
   // validasi atau limit yang udah habis gak mubazir kena request ke yt1s.io.
   const key = getCookie(req, 'kolase_key');
-  const quota = await consumeQuota(key, 'igdl');
+  const quota = await consumeCredit(key, 'igdl');
   if (!quota.ok) {
     return res.status(403).json({ ok: false, message: quota.message });
   }

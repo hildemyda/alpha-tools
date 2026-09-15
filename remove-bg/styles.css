@@ -113,6 +113,9 @@ body{
 .error.show{ display:flex; }
 .error svg{ width:15px; height:15px; flex-shrink:0; }
 
+.quota-note{ text-align:center; font-size:12px; color:var(--text-dim); margin-bottom:10px; min-height:16px; }
+.quota-note.low{ color:var(--danger); }
+
 .ghost-btn{
   width:100%; background:transparent; color:var(--text-dim); border:1px solid var(--ink-line);
   font-family:'Inter',sans-serif; font-size:14px; font-weight:500; padding:12px 14px; border-radius:12px;

@@ -17,6 +17,7 @@
   const processBtn = document.getElementById('processBtn');
   const downloadBtn = document.getElementById('downloadBtn');
   const toast = document.getElementById('toast');
+  const quotaNote = document.getElementById('quotaNote');
 
   const SERVER_LOADING_HINTS = {
     '1': 'Menghapus background lewat Dycoderss...',
@@ -117,6 +118,7 @@
 
       if (!data.ok) {
         showError(data.message || 'Gagal menghapus background.');
+        renderQuotaNote(data);
         return;
       }
 
@@ -130,6 +132,7 @@
 
       downloadBtn.hidden = false;
       processBtn.textContent = 'Proses Ulang';
+      renderQuotaNote(data);
     } catch (err) {
       showError('Terjadi kesalahan, coba lagi.');
     } finally {
@@ -173,4 +176,20 @@
     clearTimeout(showToast._t);
     showToast._t = setTimeout(() => toast.classList.remove('show'), 2200);
   }
+
+  function renderQuotaNote(status){
+    if (!quotaNote) return;
+    if (status.unlimited || status.free || status.remaining === undefined) { quotaNote.textContent = ''; return; }
+    quotaNote.textContent = `Sisa ${status.remaining} kredit`;
+    quotaNote.classList.toggle('low', status.remaining <= 2);
+  }
+
+  async function loadQuotaStatus(){
+    try {
+      const res = await fetch('/api/quota-status?feature=removebg');
+      const data = await res.json();
+      if (data.ok) renderQuotaNote(data);
+    } catch (err) { /* diamkan, gak krusial buat pengalaman utama */ }
+  }
+  loadQuotaStatus();
 })();

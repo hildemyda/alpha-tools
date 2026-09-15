@@ -54,8 +54,8 @@
   }
 
   function renderQuotaNote(status){
-    if (status.unlimited || status.remaining === undefined) return;
-    quotaNote.textContent = `Sisa ${status.remaining}x pemakaian`;
+    if (status.unlimited || status.free || status.remaining === undefined) return;
+    quotaNote.textContent = `Sisa ${status.remaining} kredit`;
     quotaNote.classList.toggle('low', status.remaining <= 2);
   }
 

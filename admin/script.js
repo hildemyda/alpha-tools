@@ -1,18 +1,30 @@
 (function(){
-  const FEATURES = ['igdl', 'brat']; // nambah fitur baru ke sistem limit -> tinggal tambah di sini
-  const FEATURE_LABEL = { igdl: 'IG DL', brat: 'Brat' };
+  // Biaya kredit tiap fitur -- ini cuma buat TAMPILAN referensi di dashboard.
+  // Angka sebenarnya yang dipakai buat motong kredit ada di lib/features.js
+  // (backend) — dua tempat ini HARUS disinkronkan manual tiap ada perubahan.
+  const FEATURE_COSTS = {
+    igdl: { label: 'IG Downloader', cost: 1 },
+    brat: { label: 'Brat Maker', cost: 1 },
+    removebg: { label: 'Remove BG', cost: 0 },
+  };
 
   const keyList = document.getElementById('keyList');
   const listLabel = document.getElementById('listLabel');
+  const costTable = document.getElementById('costTable');
   const addKeyBtn = document.getElementById('addKeyBtn');
   const addSheetOverlay = document.getElementById('addSheetOverlay');
   const cancelAddBtn = document.getElementById('cancelAddBtn');
   const confirmAddBtn = document.getElementById('confirmAddBtn');
   const newLabel = document.getElementById('newLabel');
   const newKey = document.getElementById('newKey');
-  const newIgdlLimit = document.getElementById('newIgdlLimit');
-  const newBratLimit = document.getElementById('newBratLimit');
+  const newCreditLimit = document.getElementById('newCreditLimit');
   const toast = document.getElementById('toast');
+
+  function renderCostTable(){
+    costTable.innerHTML = Object.values(FEATURE_COSTS).map(info =>
+      `<div class="cost-row"><span>${escapeHtml(info.label)}</span><span>${info.cost === 0 ? 'Gratis' : `-${info.cost} kredit`}</span></div>`
+    ).join('');
+  }
 
   async function loadKeys(){
     listLabel.textContent = 'Memuat daftar key...';
@@ -57,33 +69,29 @@
     head.appendChild(delBtn);
     card.appendChild(head);
 
-    FEATURES.forEach(feature => {
-      card.appendChild(buildQuotaRow(k, feature));
-    });
-
+    card.appendChild(buildCreditRow(k));
     return card;
   }
 
-  function buildQuotaRow(k, feature){
-    const quota = k.quotas?.[feature];
+  function buildCreditRow(k){
     const row = document.createElement('div');
     row.className = 'quota-row';
 
     const label = document.createElement('div');
     label.className = 'quota-feature';
-    label.textContent = FEATURE_LABEL[feature] || feature;
+    label.textContent = 'Kredit';
     row.appendChild(label);
 
     const barWrap = document.createElement('div');
     barWrap.className = 'quota-bar-wrap';
 
-    if (!quota) {
+    if (k.unlimited) {
       barWrap.innerHTML = `<div class="quota-numbers">Unlimited</div>`;
     } else {
-      const pct = quota.limit > 0 ? Math.min(100, Math.round((quota.used / quota.limit) * 100)) : 100;
-      const low = quota.remaining <= Math.max(1, Math.round(quota.limit * 0.1));
+      const pct = k.limit > 0 ? Math.min(100, Math.round((k.used / k.limit) * 100)) : 100;
+      const low = k.remaining <= Math.max(1, Math.round(k.limit * 0.1));
       barWrap.innerHTML = `
-        <div class="quota-numbers"><b>${quota.remaining}</b> / ${quota.limit} sisa</div>
+        <div class="quota-numbers"><b>${k.remaining}</b> / ${k.limit} sisa</div>
         <div class="quota-bar"><div class="quota-bar-fill ${low ? 'low' : ''}" style="width:${pct}%"></div></div>
       `;
     }
@@ -94,27 +102,25 @@
 
     const editBtn = document.createElement('button');
     editBtn.className = 'quota-btn';
-    editBtn.title = 'Ubah limit';
+    editBtn.title = 'Ubah limit kredit';
     editBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>';
-    editBtn.addEventListener('click', () => editLimit(k, feature, quota));
+    editBtn.addEventListener('click', () => editLimit(k));
     actions.appendChild(editBtn);
 
-    if (quota) {
-      const resetBtn = document.createElement('button');
-      resetBtn.className = 'quota-btn';
-      resetBtn.title = 'Reset pemakaian ke 0';
-      resetBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
-      resetBtn.addEventListener('click', () => resetQuota(k.key, feature));
-      actions.appendChild(resetBtn);
-    }
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'quota-btn';
+    resetBtn.title = 'Reset pemakaian ke 0';
+    resetBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
+    resetBtn.addEventListener('click', () => resetCredit(k.key));
+    actions.appendChild(resetBtn);
 
     row.appendChild(actions);
     return row;
   }
 
-  async function editLimit(k, feature, quota){
-    const current = quota ? String(quota.limit) : '';
-    const input = prompt(`Limit ${FEATURE_LABEL[feature] || feature} buat "${k.label || k.key}"\n(kosongkan = unlimited):`, current);
+  async function editLimit(k){
+    const current = k.unlimited ? '' : String(k.limit);
+    const input = prompt(`Limit kredit buat "${k.label || k.key}"\n(kosongkan = unlimited):`, current);
     if (input === null) return; // batal
 
     const limit = input.trim() === '' ? null : Number(input);
@@ -127,7 +133,7 @@
       const res = await fetch('/api/admin/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: k.key, feature, limit }),
+        body: JSON.stringify({ key: k.key, limit }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -141,13 +147,13 @@
     }
   }
 
-  async function resetQuota(key, feature){
-    if (!confirm('Reset pemakaian fitur ini balik ke 0?')) return;
+  async function resetCredit(key){
+    if (!confirm('Reset pemakaian kredit key ini balik ke 0?')) return;
     try {
       const res = await fetch('/api/admin/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, feature }),
+        body: JSON.stringify({ key }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -185,8 +191,7 @@
   addKeyBtn.addEventListener('click', () => {
     newLabel.value = '';
     newKey.value = '';
-    newIgdlLimit.value = '';
-    newBratLimit.value = '';
+    newCreditLimit.value = '';
     addSheetOverlay.classList.add('show');
   });
   cancelAddBtn.addEventListener('click', () => addSheetOverlay.classList.remove('show'));
@@ -203,8 +208,7 @@
         body: JSON.stringify({
           label: newLabel.value.trim(),
           key: newKey.value.trim(),
-          igdlLimit: newIgdlLimit.value,
-          bratLimit: newBratLimit.value,
+          creditLimit: newCreditLimit.value,
         }),
       });
       const data = await res.json();
@@ -235,5 +239,6 @@
     showToast._t = setTimeout(() => toast.classList.remove('show'), 2400);
   }
 
+  renderCostTable();
   loadKeys();
 })();

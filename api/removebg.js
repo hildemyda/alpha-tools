@@ -23,6 +23,8 @@ import axios from 'axios';
 import FormData from 'form-data';
 import sharp from 'sharp';
 import { fileTypeFromBuffer } from 'file-type';
+import { getCookie } from '../lib/cookies.js';
+import { consumeCredit } from '../lib/store.js';
 
 export const config = {
   maxDuration: 60,
@@ -273,6 +275,15 @@ export default async function handler(req, res) {
 
   const chosen = SERVERS[serverNum];
 
+  // Cek & potong kredit (biaya fitur ini diatur di lib/features.js — sekarang
+  // di-set 0/gratis, jadi ini selalu lolos, tapi tetap dipasang di sini biar
+  // begitu costnya diubah jadi >0, potongannya langsung jalan tanpa ubah kode.
+  const key = getCookie(req, 'kolase_key');
+  const credit = await consumeCredit(key, 'removebg');
+  if (!credit.ok) {
+    return res.status(403).json({ ok: false, message: credit.message });
+  }
+
   try {
     const startTime = Date.now();
     const resultBuffer = await chosen.fn(buffer);
@@ -287,6 +298,9 @@ export default async function handler(req, res) {
       elapsedMs,
       server: serverNum,
       label: chosen.label,
+      remaining: credit.remaining,
+      unlimited: credit.unlimited,
+      free: credit.free,
     });
   } catch (err) {
     console.error(`[removebg] server ${serverNum} gagal:`, err?.message);

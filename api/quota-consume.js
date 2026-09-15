@@ -1,5 +1,5 @@
 import { getCookie } from '../lib/cookies.js';
-import { consumeQuota } from '../lib/store.js';
+import { consumeCredit } from '../lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,6 +12,6 @@ export default async function handler(req, res) {
   }
 
   const key = getCookie(req, 'kolase_key');
-  const result = await consumeQuota(key, feature);
+  const result = await consumeCredit(key, feature);
   return res.status(result.ok ? 200 : 403).json(result);
 }

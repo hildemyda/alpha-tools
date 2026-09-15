@@ -11,18 +11,13 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { key, label, igdlLimit, bratLimit } = req.body || {};
+    const { key, label, creditLimit } = req.body || {};
     const finalKey = (key && key.trim()) || randomKey();
+    const limit = creditLimit === undefined || creditLimit === '' || creditLimit === null
+      ? null
+      : Number(creditLimit);
 
-    const quotas = {};
-    if (igdlLimit !== undefined && igdlLimit !== '' && igdlLimit !== null) {
-      quotas.igdl = { limit: Number(igdlLimit) };
-    }
-    if (bratLimit !== undefined && bratLimit !== '' && bratLimit !== null) {
-      quotas.brat = { limit: Number(bratLimit) };
-    }
-
-    const record = await createKey(finalKey, label, quotas);
+    const record = await createKey(finalKey, label, limit);
     return res.status(200).json({ ok: true, key: finalKey, record });
   }
 

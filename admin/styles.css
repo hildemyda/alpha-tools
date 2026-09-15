@@ -36,6 +36,19 @@ body{
 
 .section-label{ font-size:12px; font-weight:600; letter-spacing:0.03em; color:var(--text-dim); text-transform:uppercase; margin-bottom:12px; }
 
+.cost-card{
+  background:var(--ink-soft); border:1px solid var(--ink-line); border-radius:14px;
+  padding:14px 16px; margin-bottom:22px;
+}
+.cost-card .section-label{ margin-bottom:4px; }
+.cost-hint{ font-size:11.5px; color:var(--text-dim); opacity:0.8; margin-bottom:10px; }
+.cost-row{
+  display:flex; justify-content:space-between; font-size:13px; padding:6px 0;
+  border-top:1px solid var(--ink-line);
+}
+.cost-row:first-child{ border-top:none; }
+.cost-row span:last-child{ color:var(--text-dim); font-variant-numeric:tabular-nums; }
+
 .key-list{ display:flex; flex-direction:column; gap:12px; }
 .key-card{
   background:var(--ink-soft); border:1px solid var(--ink-line); border-radius:16px; padding:16px;
