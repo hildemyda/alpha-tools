@@ -89,6 +89,7 @@
   const emptyHint = document.getElementById('emptyHint');
   const downloadPngBtn = document.getElementById('downloadPngBtn');
   const downloadWebpBtn = document.getElementById('downloadWebpBtn');
+  const quotaNote = document.getElementById('quotaNote');
   const toast = document.getElementById('toast');
 
   [darkToggle, hdToggle, nobgToggle].forEach(chip => {
@@ -174,8 +175,50 @@
     showToast(ext === 'webp' ? 'WebP siap dipakai jadi stiker' : 'Berhasil diunduh');
   }
 
-  downloadPngBtn.addEventListener('click', () => download('image/png', 'png'));
-  downloadWebpBtn.addEventListener('click', () => download('image/webp', 'webp'));
+  // Limit dipotong pas tombol unduh dipencet (itu momen fitur ini "beneran
+  // dipakai"), bukan pas render preview -- biar user bisa preview bebas
+  // tanpa kena potong limit.
+  async function handleDownload(mime, ext){
+    downloadPngBtn.disabled = true;
+    downloadWebpBtn.disabled = true;
+    try {
+      const res = await fetch('/api/quota-consume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feature: 'brat' }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        showToast(data.message || 'Limit sudah habis.');
+        renderQuotaNote(data);
+        return;
+      }
+      download(mime, ext);
+      renderQuotaNote(data);
+    } catch (err) {
+      showToast('Terjadi kesalahan, coba lagi.');
+    } finally {
+      downloadPngBtn.disabled = false;
+      downloadWebpBtn.disabled = false;
+    }
+  }
+
+  function renderQuotaNote(status){
+    if (status.unlimited || status.remaining === undefined) { quotaNote.textContent = ''; return; }
+    quotaNote.textContent = `Sisa ${status.remaining}x pemakaian`;
+    quotaNote.classList.toggle('low', status.remaining <= 2);
+  }
+
+  async function loadQuotaStatus(){
+    try {
+      const res = await fetch('/api/quota-status?feature=brat');
+      const data = await res.json();
+      if (data.ok && !data.unlimited) renderQuotaNote(data);
+    } catch (err) { /* diamkan, gak krusial buat pengalaman utama */ }
+  }
+
+  downloadPngBtn.addEventListener('click', () => handleDownload('image/png', 'png'));
+  downloadWebpBtn.addEventListener('click', () => handleDownload('image/webp', 'webp'));
 
   function showToast(msg){
     document.getElementById('toastMsg').textContent = msg;
@@ -191,4 +234,5 @@
     document.fonts.ready.then(render);
   }
   render();
+  loadQuotaStatus();
 })();

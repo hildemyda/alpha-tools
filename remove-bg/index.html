@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Remove BG — Alphools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/" aria-label="Kembali ke Alphools">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="topbar-brand">
+    <div class="topbar-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.5 6.5A8 8 0 0 1 19 15M5.6 5.6A8 8 0 0 0 5 15"/></svg>
+    </div>
+    REMOVE BG
+  </div>
+</div>
+
+<div class="hint-bar">
+  <span class="hint-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+  </span>
+  <span>Pilih foto · pilih server · unduh hasil tanpa latar</span>
+</div>
+
+<div class="content">
+
+  <!-- Dropzone: shown before a photo is chosen -->
+  <div class="dropzone" id="dropzone">
+    <div class="dropzone-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+    </div>
+    <div class="dropzone-title">Ketuk untuk pilih foto</div>
+    <div class="dropzone-sub">atau tarik & lepas di sini · maks 3MB</div>
+    <input type="file" id="fileInput" accept="image/*" hidden>
+  </div>
+
+  <!-- Editor: shown after a photo is chosen -->
+  <div class="editor" id="editor" hidden>
+
+    <div class="prop-block">
+      <div class="section-label">Server</div>
+      <div class="section-label-row">Beda server, beda hasil & kecepatan. Photoroom biasanya paling rapi.</div>
+      <div class="segmented server-picker" id="serverPicker">
+        <button type="button" data-server="2" class="active">Photoroom</button>
+        <button type="button" data-server="1">Dycoderss</button>
+        <button type="button" data-server="3">BgEraser</button>
+        <button type="button" data-server="6">Pixa</button>
+        <button type="button" data-server="7">BG Remover</button>
+      </div>
+    </div>
+
+    <div class="preview-wrap">
+      <div class="preview-label" id="previewLabel">PREVIEW</div>
+      <div class="stage-outer">
+        <img id="previewImg" alt="Preview">
+        <div class="loading-overlay" id="loadingOverlay" hidden>
+          <div class="spinner"></div>
+          <div class="loading-text" id="loadingText">Menghapus background...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-meta" id="resultMeta" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      <span id="resultMetaText"></span>
+    </div>
+
+    <div class="error" id="errorMsg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span id="errorText"></span>
+    </div>
+
+    <button class="ghost-btn" id="changePhotoBtn">Ganti Foto</button>
+    <button class="btn-download-main" id="processBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.5 6.5A8 8 0 0 1 19 15M5.6 5.6A8 8 0 0 0 5 15"/></svg>
+      Hapus Background
+    </button>
+    <button class="btn-download-main" id="downloadBtn" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      Unduh Hasil
+    </button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastMsg">Berhasil diunduh</span>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

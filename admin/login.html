@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Admin — Alphools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0D1512; --ink-soft:#182420; --ink-line:#1E2E28;
+    --emerald:#10B981; --emerald-deep:#059669;
+    --text-light:#F1EEE7; --text-dim:#93A39B; --danger:#E15B4D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--ink); color:var(--text-light); font-family:'Inter',sans-serif;
+    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;
+  }
+  .card{ width:100%; max-width:360px; background:var(--ink-soft); border:1px solid var(--ink-line); border-radius:20px; padding:28px 24px; }
+  .icon{
+    width:44px; height:44px; border-radius:13px; background:var(--emerald-deep);
+    display:flex; align-items:center; justify-content:center; margin-bottom:16px;
+  }
+  .icon svg{ width:22px; height:22px; color:#fff; }
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 6px; }
+  p{ color:var(--text-dim); font-size:13px; margin:0 0 20px; line-height:1.5; }
+  input{
+    width:100%; background:var(--ink); border:1px solid var(--ink-line); color:var(--text-light);
+    font-family:'Inter',sans-serif; font-size:15px; padding:13px 14px; border-radius:12px;
+    margin-bottom:12px; outline:none; transition:border-color 0.15s ease;
+  }
+  input:focus{ border-color:var(--emerald); }
+  input.invalid{ border-color:var(--danger); }
+  button{
+    width:100%; background:var(--emerald-deep); color:#fff; border:none;
+    font-family:'Inter',sans-serif; font-size:15px; font-weight:600;
+    padding:13px 14px; border-radius:12px; cursor:pointer;
+  }
+  button:disabled{ opacity:0.6; }
+  .error{ color:var(--danger); font-size:13px; margin-top:10px; min-height:16px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+    <h1>Admin Alphools</h1>
+    <p>Kelola access key & limit pemakaian.</p>
+    <form id="loginForm" novalidate>
+      <input type="password" id="passInput" placeholder="Password admin" autocomplete="off">
+      <button type="submit" id="submitBtn">Masuk</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const input = document.getElementById('passInput');
+    const btn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!input.value.trim()) {
+        input.classList.add('invalid');
+        errorMsg.textContent = 'Password belum diisi.';
+        return;
+      }
+      input.classList.remove('invalid');
+      errorMsg.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Memeriksa...';
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: input.value }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          window.location.href = '/admin/';
+        } else {
+          errorMsg.textContent = data.message || 'Password salah.';
+          input.classList.add('invalid');
+          btn.disabled = false;
+          btn.textContent = 'Masuk';
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Terjadi kesalahan, coba lagi.';
+        btn.disabled = false;
+        btn.textContent = 'Masuk';
+      }
+    });
+  </script>
+</body>
+</html>

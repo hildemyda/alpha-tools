@@ -78,6 +78,9 @@ input::placeholder{ color:var(--text-dim); }
 .error svg{ width:14px; height:14px; flex-shrink:0; display:none; }
 .error.show svg{ display:block; }
 
+.quota-note{ text-align:center; font-size:12px; color:var(--text-dim); margin-top:10px; min-height:16px; }
+.quota-note.low{ color:var(--danger); }
+
 /* ---- Result ---- */
 .result{
   background:var(--ink-soft); border:1px solid var(--ink-line); border-radius:16px;

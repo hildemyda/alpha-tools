@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Admin — Alphools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+    ADMIN
+  </div>
+  <a href="/" class="topbar-link">Buka Alphools</a>
+</div>
+
+<div class="content">
+
+  <button type="button" class="btn-primary" id="addKeyBtn">+ Tambah Key Baru</button>
+
+  <div class="section-label" id="listLabel">Memuat daftar key...</div>
+  <div class="key-list" id="keyList"></div>
+
+</div>
+
+<!-- Sheet: tambah key baru -->
+<div class="sheet-overlay" id="addSheetOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Tambah Key Baru</div>
+
+    <label class="field-label">Label (nama orang/tim)</label>
+    <input type="text" id="newLabel" placeholder="contoh: Budi">
+
+    <label class="field-label">Key (kosongkan buat auto-generate)</label>
+    <input type="text" id="newKey" placeholder="contoh: budi-2026" autocomplete="off">
+
+    <label class="field-label">Limit IG Downloader (kosongkan = unlimited)</label>
+    <input type="number" id="newIgdlLimit" placeholder="contoh: 50" min="0">
+
+    <label class="field-label">Limit Brat Maker (kosongkan = unlimited)</label>
+    <input type="number" id="newBratLimit" placeholder="contoh: 50" min="0">
+
+    <div class="sheet-actions">
+      <button type="button" class="btn-ghost" id="cancelAddBtn">Batal</button>
+      <button type="button" class="btn-primary" id="confirmAddBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastMsg">Berhasil</span>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

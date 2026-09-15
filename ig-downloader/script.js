@@ -7,6 +7,7 @@
   const result = document.getElementById('result');
   const resultCount = document.getElementById('resultCount');
   const resultList = document.getElementById('resultList');
+  const quotaNote = document.getElementById('quotaNote');
   const toast = document.getElementById('toast');
 
   pasteBtn.addEventListener('click', async () => {
@@ -38,10 +39,12 @@
 
       if (!data.ok) {
         showError(data.message || 'Gagal mengambil media.');
+        renderQuotaNote(data);
         return;
       }
 
       renderItems(data.items);
+      renderQuotaNote(data);
     } catch (err) {
       showError('Terjadi kesalahan, coba lagi.');
     } finally {
@@ -49,6 +52,21 @@
       fetchBtn.textContent = 'Ambil Media';
     }
   }
+
+  function renderQuotaNote(status){
+    if (status.unlimited || status.remaining === undefined) return;
+    quotaNote.textContent = `Sisa ${status.remaining}x pemakaian`;
+    quotaNote.classList.toggle('low', status.remaining <= 2);
+  }
+
+  async function loadQuotaStatus(){
+    try {
+      const res = await fetch('/api/quota-status?feature=igdl');
+      const data = await res.json();
+      if (data.ok && !data.unlimited) renderQuotaNote(data);
+    } catch (err) { /* diamkan, gak krusial buat pengalaman utama */ }
+  }
+  loadQuotaStatus();
 
   function renderItems(items){
     resultCount.textContent = items.length > 1

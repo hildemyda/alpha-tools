@@ -9,6 +9,8 @@
 // - Cuma post publik yang bisa diambil.
 
 import * as cheerio from 'cheerio';
+import { getCookie } from '../lib/cookies.js';
+import { consumeQuota } from '../lib/store.js';
 
 export default async function handler(req, res) {
   const { url } = req.query;
@@ -18,6 +20,14 @@ export default async function handler(req, res) {
   }
   if (!/instagram\.com\//i.test(url)) {
     return res.status(400).json({ ok: false, message: 'Link Instagram gak valid.' });
+  }
+
+  // Cek & potong limit DULU sebelum manggil scraper, biar link yang gagal
+  // validasi atau limit yang udah habis gak mubazir kena request ke yt1s.io.
+  const key = getCookie(req, 'kolase_key');
+  const quota = await consumeQuota(key, 'igdl');
+  if (!quota.ok) {
+    return res.status(403).json({ ok: false, message: quota.message });
   }
 
   try {
@@ -56,7 +66,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ ok: false, message: 'Gagal menemukan media. Pastikan link benar dan akun tidak private.' });
     }
 
-    return res.status(200).json({ ok: true, items });
+    return res.status(200).json({ ok: true, items, remaining: quota.remaining, unlimited: quota.unlimited });
   } catch (err) {
     console.error('igdl error:', err);
     return res.status(500).json({ ok: false, message: 'Terjadi kesalahan saat mengambil data.' });
