@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Alphools — Kumpulan Tools Edit Foto</title>
-<meta name="description" content="Qolase, Round Foto, Brat Maker, dan tools edit foto lainnya — langsung dari browser.">
+<meta name="description" content="Qolase, Remove BG, Brat Maker, IG Downloader, dan tools foto lainnya — langsung dari browser.">
 
 <!-- Open Graph: ini yang dibaca WhatsApp/browser lain buat bikin preview link.
      URL di og:image & og:url WAJIB absolute (https://...), ganti domainnya
      kalau kamu pakai custom domain, bukan alphools.vercel.app. -->
 <meta property="og:title" content="Alphools">
-<meta property="og:description" content="Qolase, Round Foto, Brat Maker, dan tools edit foto lainnya — langsung dari browser.">
+<meta property="og:description" content="Qolase, Remove BG, Brat Maker, IG Downloader, dan tools foto lainnya — langsung dari browser.">
 <meta property="og:image" content="https://alphools.vercel.app/og-image.jpg">
 <meta property="og:image:alt" content="Alphools — kumpulan tools edit foto">
 <meta property="og:url" content="https://alphools.vercel.app/">
@@ -117,6 +117,18 @@
   .error svg{ width:14px; height:14px; flex-shrink:0; display:none; }
   .error.show svg{ display:block; }
 
+  /* ---- Di bawah kartu: bantuan + daftar tool ---- */
+  .help{ width:100%; margin:16px 0 0; text-align:center; font-size:12.5px; color:var(--text-dim); line-height:1.5; }
+  .help a{ color:var(--emerald); text-decoration:none; font-weight:600; }
+  .help a:active{ opacity:0.7; }
+  .tools-wrap{ width:100%; margin-top:26px; text-align:center; }
+  .tools-label{ font-size:10.5px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); opacity:0.75; margin-bottom:10px; }
+  .tool-chips{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
+  .tool-chips span{
+    font-size:11.5px; color:var(--text-dim); background:var(--ink-soft); border:1px solid var(--ink-line);
+    padding:4px 10px; border-radius:999px;
+  }
+
   .card.shake{ animation:shake 0.4s ease; }
   @keyframes shake{
     10%,90%{ transform:translateX(-1px); } 20%,80%{ transform:translateX(2px); }
@@ -129,11 +141,11 @@
 
   <div class="scene">
     <div class="badge">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>
     </div>
 
-    <h1>Buka Qolase</h1>
-    <p class="sub">Masukkan access key untuk mulai bikin kolase.</p>
+    <h1>Masuk ke Alphools</h1>
+    <p class="sub" id="subText">Masukkan access key untuk membuka semua tools.</p>
 
     <div class="card" id="card">
       <form id="loginForm" novalidate>
@@ -143,12 +155,22 @@
             <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
-        <button type="submit" class="submit" id="submitBtn">Buka</button>
+        <button type="submit" class="submit" id="submitBtn">Masuk</button>
         <div class="error" id="errorMsg">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
           <span id="errorText"></span>
         </div>
       </form>
+    </div>
+
+    <p class="help">Belum punya key? Minta ke admin.<br><a href="/">← Lihat semua tools</a></p>
+
+    <div class="tools-wrap">
+      <div class="tools-label">Isi Alphools</div>
+      <div class="tool-chips">
+        <span>Qolase</span><span>Round Foto</span><span>Brat Maker</span>
+        <span>IG Downloader</span><span>Remove BG</span><span>Bongkar PLP</span>
+      </div>
     </div>
   </div>
 
@@ -160,6 +182,25 @@
     const errorMsg = document.getElementById('errorMsg');
     const errorText = document.getElementById('errorText');
     const toggleEye = document.getElementById('toggleEye');
+
+    // Tujuan setelah login (diisi middleware lewat ?redirect=). Hanya jalur di
+    // situs ini yang diterima; selain itu balik ke menu awal. Mencegah login
+    // diarahkan ke situs lain (open redirect), mis. ?redirect=https://situs-lain.
+    function safeRedirect(raw) {
+      if (typeof raw !== 'string' || raw[0] !== '/' || raw[1] === '/' || raw[1] === '\\' || /[\u0000-\u001f]/.test(raw)) return '/';
+      return raw;
+    }
+    const redirectTo = safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
+
+    // Subjudul disesuaikan dengan tool yang sedang dibuka.
+    const TOOL_NAMES = {
+      '/qolase/': 'Qolase', '/round-foto/': 'Round Foto', '/brat-maker/': 'Brat Maker',
+      '/ig-downloader/': 'IG Downloader', '/remove-bg/': 'Remove BG', '/bongkar-plp/': 'Bongkar PLP',
+    };
+    const toolKey = redirectTo.split(/[?#]/)[0].replace(/index\.html$/, '').replace(/\/?$/, '/');
+    if (TOOL_NAMES[toolKey]) {
+      document.getElementById('subText').textContent = 'Masukkan access key untuk membuka ' + TOOL_NAMES[toolKey] + '.';
+    }
 
     toggleEye.addEventListener('click', () => {
       const showing = input.type === 'text';
@@ -195,18 +236,16 @@
         const data = await res.json();
         if (data.ok) {
           btn.textContent = 'Berhasil';
-          const params = new URLSearchParams(window.location.search);
-          const redirect = params.get('redirect') || '/';
-          window.location.href = redirect;
+          window.location.href = redirectTo;
         } else {
           showError(data.message || 'Key belum cocok, coba lagi.');
           btn.disabled = false;
-          btn.textContent = 'Buka';
+          btn.textContent = 'Masuk';
         }
       } catch (err) {
         showError('Terjadi kesalahan, coba lagi.');
         btn.disabled = false;
-        btn.textContent = 'Buka';
+        btn.textContent = 'Masuk';
       }
     });
 

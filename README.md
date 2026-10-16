@@ -25,7 +25,8 @@ project/
 │   ├── styles.css
 │   └── script.js
 ├── bongkar-plp/
-│   ├── index.html      ← app bongkar file proyek Pixellab (.plp): ambil gambar, font & info desain (jalan di browser, pakai JSZip dari CDN)
+│   ├── index.html      ← app bongkar file proyek Pixellab (.plp): ambil gambar, font & info desain (jalan di browser, tanpa server)
+│   ├── jszip.min.js    ← JSZip 3.10.1 disimpan lokal (bukan dari CDN)
 │   ├── styles.css
 │   └── script.js
 ├── admin/
@@ -109,6 +110,7 @@ Klik Deploy. Setelah selesai:
 - **Migrasi dari sistem lama**: kalau sebelumnya masih pakai `ACCESS_KEYS` (Environment Variable) ATAU versi limit-per-fitur (sebelum jadi kredit gabungan), semua itu sudah TIDAK dipakai lagi — semua key sekarang harus didaftarkan ulang lewat `/admin` dengan 1 angka limit kredit.
 - Fitur yang ikut sistem kredit sekarang: **IG Downloader** (cost 1) dan **Brat Maker** (cost 1). **Remove BG** sudah tersambung ke sistemnya juga tapi cost-nya di-set **0 (gratis)** — gampang diubah kapan aja lewat `lib/features.js`. Qolase & Round Foto murni jalan di browser, gak tersambung ke sistem kredit sama sekali.
 - Kebijakan limit sekarang: **abis ya abis** sampai di-reset manual dari `/admin` (gak ada reset otomatis harian/bulanan).
+- **Akses**: menu awal (`/`) dan `/api/quota-status` bisa dibuka TANPA login (daftar `PUBLIC_PATHS` di `middleware.js`). Semua tool dan API lainnya tetap wajib access key; kalau belum login, pengguna diarahkan ke `/login.html` lalu dikembalikan ke tool yang dibuka. Tag Open Graph (preview link WhatsApp) ada di `index.html` dan `login.html`.
 - `/admin` dan `/api/admin/*` pakai cookie & password TERPISAH dari access key user biasa — orang yang cuma punya access key gak akan bisa masuk ke situ.
 - **IG Downloader** bergantung ke layanan pihak ketiga (`yt1s.io`). Kalau layanan itu down/berubah/ngeblokir, fitur ini ikut gagal — limitasi bawaan semua downloader non-resmi, bukan bug di kode.
 - **Remove BG** juga bergantung penuh ke layanan pihak ketiga (Photoroom, Dycoderss, BgEraser, Pixa, Background-Remover.com) — kalau salah satu down/berubah, tinggal pilih server lain dari dropdown di halamannya. Server **BgEraser** butuh proses sampai ±60 detik; di **Vercel Hobby plan, function timeout maksimal 10 detik dan gak bisa dinaikin** — jadi server ini kemungkinan besar bakal gagal/timeout di plan Hobby, baru bisa kepakai normal kalau upgrade ke Pro (yang mengizinkan `maxDuration` lebih lama).

@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Alphools</title>
+<title>Alphools — Kumpulan Tools Edit Foto</title>
+<meta name="description" content="Qolase, Remove BG, Brat Maker, IG Downloader, dan tools foto lainnya — langsung dari browser.">
+
+<!-- Open Graph: dibaca WhatsApp/Facebook/dll buat bikin preview link. Karena menu
+     awal sekarang publik, tag ini WAJIB ada di sini (bukan cuma di login.html).
+     URL og:image & og:url harus absolute; ganti domainnya kalau pakai custom domain. -->
+<meta property="og:title" content="Alphools">
+<meta property="og:description" content="Qolase, Remove BG, Brat Maker, IG Downloader, dan tools foto lainnya — langsung dari browser.">
+<meta property="og:image" content="https://alphools.vercel.app/og-image.jpg">
+<meta property="og:image:alt" content="Alphools — kumpulan tools edit foto">
+<meta property="og:url" content="https://alphools.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="id_ID">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -40,7 +53,21 @@
   }
   .credit-chip svg{ width:13px; height:13px; }
   .credit-chip.low{ color:#E15B4D; background:rgba(225,91,77,0.08); border-color:rgba(225,91,77,0.3); }
+  .login-chip{
+    display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:#fff;
+    background:var(--emerald-deep); padding:7px 15px; border-radius:999px; text-decoration:none; white-space:nowrap;
+    transition:transform 0.1s ease;
+  }
+  .login-chip:active{ transform:scale(0.97); }
+  .login-chip svg{ width:13px; height:13px; }
   .tagline{ color:var(--text-dim); font-size:13.5px; margin:0 0 22px; }
+  .tagline.has-note{ margin-bottom:10px; }
+  .guest-note{
+    display:flex; align-items:flex-start; gap:8px; margin:0 0 22px; padding:10px 12px;
+    font-size:12.5px; line-height:1.45; color:var(--text-dim);
+    background:var(--ink-soft); border:1px solid var(--ink-line); border-radius:12px;
+  }
+  .guest-note svg{ width:15px; height:15px; flex-shrink:0; margin-top:1px; color:var(--emerald); }
 
   /* ---- Filter chips ---- */
   .filters{
@@ -115,8 +142,16 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 0 1 0 3.5h-3a1.8 1.8 0 0 0 0 3.5h4"/></svg>
         <span id="creditText"></span>
       </div>
+      <a class="login-chip" id="loginChip" href="/login.html" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>
+        Masuk
+      </a>
     </div>
-    <p class="tagline">Kumpulan tools kecil buat ngedit &amp; nyusun foto.</p>
+    <p class="tagline" id="tagline">Kumpulan tools kecil buat ngedit &amp; nyusun foto.</p>
+    <div class="guest-note" id="guestNote" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span>Lihat-lihat dulu aja. Pas kamu ketuk salah satu tool, nanti diminta access key.</span>
+    </div>
 
     <div class="filters" id="filters">
       <button class="chip active" data-filter="all">Semua</button>
@@ -280,8 +315,21 @@
   var chipText = document.getElementById('creditText');
   var chipShown = false;
 
+  // ---- Belum login: tampilkan tombol Masuk, tool diberi ikon gembok ----
+  var LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  var guestApplied = false;
+  function applyGuest(){
+    if (guestApplied) return;
+    guestApplied = true;
+    chip.hidden = true;
+    document.getElementById('loginChip').hidden = false;
+    document.getElementById('guestNote').hidden = false;
+    document.getElementById('tagline').classList.add('has-note');
+    [].forEach.call(document.querySelectorAll('.tool-arrow'), function(a){ a.innerHTML = LOCK_SVG; });
+  }
+
   function showCredit(status){
-    if (chipShown || !status || !status.exists) return;
+    if (guestApplied || chipShown || !status || !status.exists) return;
     if (status.unlimited) chipText.textContent = 'Kredit unlimited';
     else if (typeof status.remaining === 'number') {
       chipText.textContent = 'Sisa ' + status.remaining + ' kredit';
@@ -294,7 +342,11 @@
   [].forEach.call(document.querySelectorAll('.tool-card[data-feature]'), function(card){
     fetch('/api/quota-status?feature=' + encodeURIComponent(card.dataset.feature))
       .then(function(r){ return r.json(); })
-      .then(function(d){ if (d && d.ok) { setBadge(card, d); showCredit(d); } })
+      .then(function(d){
+        if (!d || !d.ok) return;
+        setBadge(card, d);
+        if (d.exists === false) applyGuest(); else showCredit(d);
+      })
       .catch(function(){ /* badge tetap tersembunyi, gak krusial */ });
   });
 })();

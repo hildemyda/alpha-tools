@@ -9,9 +9,18 @@ export const config = {
   matcher: ['/((?!login\\.html|api/verify|admin/login\\.html|api/admin/login|og-image\\.jpg|favicon\\.ico).*)'],
 };
 
+// Halaman yang boleh dibuka TANPA login:
+// - "/" dan "/index.html": menu awal (daftar tools). Tool-nya sendiri tetap terkunci.
+// - "/api/quota-status": cuma ngasih tau status key milik si pemanggil (atau
+//   exists:false kalau belum login + biaya tiap fitur). Dipakai menu awal buat
+//   nentuin tampil tombol "Masuk" atau sisa kredit. Gak ngebocorin key lain.
+const PUBLIC_PATHS = new Set(['/', '/index.html', '/api/quota-status']);
+
 export default async function middleware(request) {
   const url = new URL(request.url);
   const cookieHeader = request.headers.get('cookie') || '';
+
+  if (PUBLIC_PATHS.has(url.pathname)) return next();
 
   // ── Jalur admin: /admin/* dan /api/admin/* pakai cookie & password SENDIRI,
   // gak nyambung sama sistem access key user biasa ──
