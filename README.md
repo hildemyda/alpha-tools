@@ -24,6 +24,10 @@ project/
 │   ├── index.html      ← app hapus background foto (5 pilihan server)
 │   ├── styles.css
 │   └── script.js
+├── bongkar-plp/
+│   ├── index.html      ← app bongkar file proyek Pixellab (.plp): ambil gambar, font & info desain (jalan di browser, pakai JSZip dari CDN)
+│   ├── styles.css
+│   └── script.js
 ├── admin/
 │   ├── login.html       ← login admin (password SENDIRI, beda dari access key user)
 │   ├── index.html        ← dashboard: kelola key, limit, reset pemakaian

@@ -5,7 +5,7 @@
   const FEATURE_COSTS = {
     igdl: { label: 'IG Downloader', cost: 1 },
     brat: { label: 'Brat Maker', cost: 1 },
-    removebg: { label: 'Remove BG', cost: 0 },
+    removebg: { label: 'Remove BG', cost: 1 },
   };
 
   const keyList = document.getElementById('keyList');

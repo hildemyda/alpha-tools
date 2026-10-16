@@ -24,7 +24,7 @@ import FormData from 'form-data';
 import sharp from 'sharp';
 import { fileTypeFromBuffer } from 'file-type';
 import { getCookie } from '../lib/cookies.js';
-import { consumeCredit } from '../lib/store.js';
+import { consumeCredit, refundCredit } from '../lib/store.js';
 
 export const config = {
   maxDuration: 60,
@@ -275,9 +275,8 @@ export default async function handler(req, res) {
 
   const chosen = SERVERS[serverNum];
 
-  // Cek & potong kredit (biaya fitur ini diatur di lib/features.js — sekarang
-  // di-set 0/gratis, jadi ini selalu lolos, tapi tetap dipasang di sini biar
-  // begitu costnya diubah jadi >0, potongannya langsung jalan tanpa ubah kode.
+  // Cek & potong kredit (biaya fitur ini diatur di lib/features.js). Kalau
+  // server pihak ketiga gagal memproses, kredit dikembalikan (lihat catch).
   const key = getCookie(req, 'kolase_key');
   const credit = await consumeCredit(key, 'removebg');
   if (!credit.ok) {
@@ -304,10 +303,12 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error(`[removebg] server ${serverNum} gagal:`, err?.message);
+    try { await refundCredit(key, credit); } catch (e) { console.error('[removebg] refund gagal:', e?.message); }
     return res.status(502).json({
       ok: false,
-      message: `Gagal menghapus background dengan server ${chosen.label}, coba server lain.`,
+      message: `Gagal menghapus background dengan server ${chosen.label}, kredit dikembalikan. Coba server lain.`,
       server: serverNum,
+      remaining: credit.remaining !== undefined ? credit.remaining + (credit.cost || 0) : undefined,
     });
   }
 }

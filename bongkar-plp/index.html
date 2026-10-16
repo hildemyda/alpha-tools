@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bongkar PLP — Alphools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/" aria-label="Kembali ke Alphools">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="topbar-brand">
+    <div class="topbar-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+    </div>
+    BONGKAR PLP
+  </div>
+</div>
+
+<div class="hint-bar">
+  <span class="hint-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+  </span>
+  <span>Pilih file .plp · lihat isinya · simpan gambar &amp; font</span>
+</div>
+
+<div class="content">
+  <input id="file" type="file" hidden>
+
+  <!-- Intro: dipilih file dulu -->
+  <section id="intro">
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+      </div>
+      <div class="dropzone-title">Ketuk untuk pilih file .plp</div>
+      <div class="dropzone-sub">atau tarik &amp; lepas di sini · proyek Pixellab</div>
+    </div>
+
+    <div id="prog" hidden><div id="bar"><i></i></div><span id="ptxt"></span></div>
+    <div id="err" class="alert" role="alert" hidden></div>
+
+    <ol class="steps">
+      <li><span class="num">1</span><span>Pilih file proyek (.plp) dari penyimpanan HP.</span></li>
+      <li><span class="num">2</span><span>Lihat isinya: gambar, font, dan lapisan desain.</span></li>
+      <li><span class="num">3</span><span>Simpan yang kamu butuhkan, atau semuanya sekaligus.</span></li>
+    </ol>
+    <p class="privacy">Semua diproses di HP kamu. Tidak ada file yang diunggah ke server.</p>
+  </section>
+
+  <!-- Hasil -->
+  <section id="result" hidden>
+    <div class="hero">
+      <img id="poster" class="poster" alt="">
+      <div class="hero-body">
+        <h2 id="title"></h2>
+        <p id="stats"></p>
+        <div class="acts">
+          <button class="btn sm" id="all">Simpan semua (.zip)</button>
+          <button class="btn sm ghost" id="again">Pilih file lain</button>
+        </div>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div id="panels"></div>
+  </section>
+
+  <p class="note">Cek lisensi gambar dan font sebelum dipakai untuk keperluan komersial. Font bawaan Pixellab tidak ikut tersimpan di file .plp, jadi hanya namanya yang bisa ditampilkan.</p>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

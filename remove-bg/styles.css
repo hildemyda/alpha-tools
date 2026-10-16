@@ -4,6 +4,7 @@
   --text-light:#F1EEE7; --text-dim:#93A39B; --danger:#E15B4D;
 }
 *{ box-sizing:border-box; }
+[hidden]{ display:none !important; }
 html,body{ margin:0; padding:0; }
 body{
   background:var(--ink); color:var(--text-light); font-family:'Inter',sans-serif;
