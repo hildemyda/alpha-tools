@@ -1,0 +1,56 @@
+import { next } from '@vercel/functions';
+import { redis } from './lib/redis.js';
+
+// Path yang LEWAT TANPA dicek sama sekali (halaman login itu sendiri + endpoint
+// buat login + og-image.jpg, karena itu WAJIB bisa diakses publik biar WhatsApp/
+// Facebook/dll bisa narik gambarnya buat preview link, walau requester-nya gak
+// punya cookie akses). Semua path lain wajib punya cookie yang valid sesuai jalurnya.
+export const config = {
+  matcher: ['/((?!login\\.html|api/verify|admin/login\\.html|api/admin/login|og-image\\.jpg|favicon\\.ico).*)'],
+};
+
+// Halaman yang boleh dibuka TANPA login:
+// - "/" dan "/index.html": menu awal (daftar tools). Tool-nya sendiri tetap terkunci.
+// - "/api/quota-status": cuma ngasih tau status key milik si pemanggil (atau
+//   exists:false kalau belum login + biaya tiap fitur). Dipakai menu awal buat
+//   nentuin tampil tombol "Masuk" atau sisa kredit. Gak ngebocorin key lain.
+const PUBLIC_PATHS = new Set(['/', '/index.html', '/api/quota-status']);
+
+export default async function middleware(request) {
+  const url = new URL(request.url);
+  const cookieHeader = request.headers.get('cookie') || '';
+
+  if (PUBLIC_PATHS.has(url.pathname)) return next();
+
+  // ── Jalur admin: /admin/* dan /api/admin/* pakai cookie & password SENDIRI,
+  // gak nyambung sama sistem access key user biasa ──
+  if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api/admin')) {
+    const match = cookieHeader.match(/(?:^|;\s*)alphools_admin=([^;]+)/);
+    const token = match ? decodeURIComponent(match[1]) : null;
+    const valid = token && process.env.ADMIN_PASSWORD && token === process.env.ADMIN_PASSWORD;
+
+    if (valid) return next();
+
+    if (url.pathname.startsWith('/api/admin')) {
+      return new Response(JSON.stringify({ ok: false, message: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return Response.redirect(new URL('/admin/login.html', request.url), 302);
+  }
+
+  // ── Jalur user biasa: cookie kolase_key harus cocok sama key yang beneran
+  // ada di KV (bukan lagi dicocokkan ke env var ACCESS_KEYS) ──
+  const match = cookieHeader.match(/(?:^|;\s*)kolase_key=([^;]+)/);
+  const token = match ? decodeURIComponent(match[1]) : null;
+
+  if (token) {
+    const record = await redis.get(`access:${token}`);
+    if (record) return next();
+  }
+
+  const loginUrl = new URL('/login.html', request.url);
+  loginUrl.searchParams.set('redirect', url.pathname);
+  return Response.redirect(loginUrl, 302);
+}

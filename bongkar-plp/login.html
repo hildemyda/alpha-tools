@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Alphools — Kumpulan Tools Edit Foto</title>
+<meta name="description" content="Qolase, Remove BG, Brat Maker, IG Downloader, dan tools foto lainnya — langsung dari browser.">
+
+<!-- Open Graph: ini yang dibaca WhatsApp/browser lain buat bikin preview link.
+     URL di og:image & og:url WAJIB absolute (https://...), ganti domainnya
+     kalau kamu pakai custom domain, bukan alphools.vercel.app. -->
+<meta property="og:title" content="Alphools">
+<meta property="og:description" content="Qolase, Remove BG, Brat Maker, IG Downloader, dan tools foto lainnya — langsung dari browser.">
+<meta property="og:image" content="https://alphools.vercel.app/og-image.jpg">
+<meta property="og:image:alt" content="Alphools — kumpulan tools edit foto">
+<meta property="og:url" content="https://alphools.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="id_ID">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0D1512; --ink-soft:#182420; --ink-line:#1E2E28;
+    --emerald:#10B981; --emerald-deep:#059669;
+    --text-light:#F1EEE7; --text-dim:#93A39B; --danger:#E15B4D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--ink); color:var(--text-light); font-family:'Inter',sans-serif;
+    min-height:100vh; position:relative; isolation:isolate;
+  }
+
+  /* ---- Animated grid backdrop: always fills the viewport, never clipped
+     by content height or the browser chrome collapsing/expanding ---- */
+  .grid-bg{
+    position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(16,185,129,0.8) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16,185,129,0.8) 1px, transparent 1px);
+    background-size:42px 42px;
+    /* the lines themselves are near-invisible against --ink; the 0.8 alpha
+       above only matters once combined with this dim mix-blend + mask fade,
+       keeping the grid felt rather than seen */
+    opacity:0.055;
+    animation:gridDrift 26s linear infinite;
+  }
+  .grid-bg::after{
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 38%, transparent 0%, var(--ink) 78%);
+  }
+  @keyframes gridDrift{
+    from{ background-position:0 0, 0 0; }
+    to{ background-position:42px 42px, 42px 42px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .grid-bg{ animation:none; }
+  }
+
+  .scene{
+    width:100%; max-width:360px; margin:0 auto;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:32px 20px;
+  }
+
+  /* ---- Mark: the lock, on its own ---- */
+  .badge{
+    width:50px; height:50px; border-radius:14px; background:var(--emerald-deep);
+    display:flex; align-items:center; justify-content:center; margin-bottom:22px;
+    box-shadow:0 10px 22px -8px rgba(5,150,105,0.55);
+    opacity:0; transform:scale(0.85);
+    animation:pop 0.4s cubic-bezier(.2,.8,.3,1.15) forwards;
+  }
+  @keyframes pop{ to{ opacity:1; transform:scale(1); } }
+  .badge svg{ width:25px; height:25px; color:#fff; }
+  @media (prefers-reduced-motion: reduce){
+    .badge{ animation:none; opacity:1; transform:scale(1); }
+  }
+
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:21px; margin:0 0 7px; text-align:center; letter-spacing:0.01em; }
+  .sub{ color:var(--text-dim); font-size:13.5px; margin:0 0 24px; line-height:1.55; text-align:center; }
+
+  .card{
+    width:100%; background:var(--ink-soft); border:1px solid var(--ink-line);
+    border-radius:18px; padding:20px 20px 18px;
+  }
+  .field{ position:relative; margin-bottom:12px; }
+  input{
+    width:100%; background:var(--ink); border:1px solid #243830; color:var(--text-light);
+    font-family:'Inter',sans-serif; font-size:15px; padding:13px 44px 13px 14px; border-radius:12px;
+    outline:none; transition:border-color 0.15s ease;
+  }
+  input:focus{ border-color:var(--emerald); }
+  input.invalid{ border-color:var(--danger); }
+
+  .toggle-eye{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    width:32px; height:32px; border:none; background:transparent; color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:8px;
+  }
+  .toggle-eye:active{ background:rgba(255,255,255,0.06); }
+  .toggle-eye svg{ width:18px; height:18px; }
+
+  button.submit{
+    width:100%; background:var(--emerald-deep); color:#fff; border:none;
+    font-family:'Inter',sans-serif; font-size:15px; font-weight:600;
+    padding:13px 14px; border-radius:12px; cursor:pointer; transition:transform 0.1s ease, opacity 0.15s ease;
+  }
+  button.submit:active{ transform:scale(0.98); }
+  button.submit:disabled{ opacity:0.6; }
+
+  .error{
+    color:var(--danger); font-size:13px; margin-top:11px; min-height:16px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .error svg{ width:14px; height:14px; flex-shrink:0; display:none; }
+  .error.show svg{ display:block; }
+
+  /* ---- Di bawah kartu: bantuan + daftar tool ---- */
+  .help{ width:100%; margin:16px 0 0; text-align:center; font-size:12.5px; color:var(--text-dim); line-height:1.5; }
+  .help a{ color:var(--emerald); text-decoration:none; font-weight:600; }
+  .help a:active{ opacity:0.7; }
+  .tools-wrap{ width:100%; margin-top:26px; text-align:center; }
+  .tools-label{ font-size:10.5px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); opacity:0.75; margin-bottom:10px; }
+  .tool-chips{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
+  .tool-chips span{
+    font-size:11.5px; color:var(--text-dim); background:var(--ink-soft); border:1px solid var(--ink-line);
+    padding:4px 10px; border-radius:999px;
+  }
+
+  .card.shake{ animation:shake 0.4s ease; }
+  @keyframes shake{
+    10%,90%{ transform:translateX(-1px); } 20%,80%{ transform:translateX(2px); }
+    30%,50%,70%{ transform:translateX(-4px); } 40%,60%{ transform:translateX(4px); }
+  }
+</style>
+</head>
+<body>
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <div class="scene">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>
+    </div>
+
+    <h1>Masuk ke Alphools</h1>
+    <p class="sub" id="subText">Masukkan access key untuk membuka semua tools.</p>
+
+    <div class="card" id="card">
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <input type="password" id="keyInput" placeholder="Access key" autocomplete="off">
+          <button type="button" class="toggle-eye" id="toggleEye" aria-label="Tampilkan key">
+            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button type="submit" class="submit" id="submitBtn">Masuk</button>
+        <div class="error" id="errorMsg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <span id="errorText"></span>
+        </div>
+      </form>
+    </div>
+
+    <p class="help">Belum punya key? Minta ke admin.<br><a href="/">← Lihat semua tools</a></p>
+
+    <div class="tools-wrap">
+      <div class="tools-label">Isi Alphools</div>
+      <div class="tool-chips">
+        <span>Qolase</span><span>Round Foto</span><span>Brat Maker</span>
+        <span>IG Downloader</span><span>Remove BG</span><span>Bongkar PLP</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const card = document.getElementById('card');
+    const input = document.getElementById('keyInput');
+    const btn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
+    const toggleEye = document.getElementById('toggleEye');
+
+    // Tujuan setelah login (diisi middleware lewat ?redirect=). Hanya jalur di
+    // situs ini yang diterima; selain itu balik ke menu awal. Mencegah login
+    // diarahkan ke situs lain (open redirect), mis. ?redirect=https://situs-lain.
+    function safeRedirect(raw) {
+      if (typeof raw !== 'string' || raw[0] !== '/' || raw[1] === '/' || raw[1] === '\\' || /[\u0000-\u001f]/.test(raw)) return '/';
+      return raw;
+    }
+    const redirectTo = safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
+
+    // Subjudul disesuaikan dengan tool yang sedang dibuka.
+    const TOOL_NAMES = {
+      '/qolase/': 'Qolase', '/round-foto/': 'Round Foto', '/brat-maker/': 'Brat Maker',
+      '/ig-downloader/': 'IG Downloader', '/remove-bg/': 'Remove BG', '/bongkar-plp/': 'Bongkar PLP',
+    };
+    const toolKey = redirectTo.split(/[?#]/)[0].replace(/index\.html$/, '').replace(/\/?$/, '/');
+    if (TOOL_NAMES[toolKey]) {
+      document.getElementById('subText').textContent = 'Masukkan access key untuk membuka ' + TOOL_NAMES[toolKey] + '.';
+    }
+
+    toggleEye.addEventListener('click', () => {
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      toggleEye.setAttribute('aria-label', showing ? 'Tampilkan key' : 'Sembunyikan key');
+      toggleEye.querySelector('svg').innerHTML = showing
+        ? '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>'
+        : '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a20.4 20.4 0 0 1-3.22 4.27M1 1l22 22"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>';
+    });
+
+    input.addEventListener('input', () => {
+      if (input.value.trim()) clearError();
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!input.value.trim()) {
+        showError('Access key belum diisi, isi dulu ya.');
+        input.focus();
+        return;
+      }
+
+      clearError();
+      btn.disabled = true;
+      btn.textContent = 'Memeriksa...';
+      try {
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: input.value }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          btn.textContent = 'Berhasil';
+          window.location.href = redirectTo;
+        } else {
+          showError(data.message || 'Key belum cocok, coba lagi.');
+          btn.disabled = false;
+          btn.textContent = 'Masuk';
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan, coba lagi.');
+        btn.disabled = false;
+        btn.textContent = 'Masuk';
+      }
+    });
+
+    function showError(message){
+      input.classList.add('invalid');
+      errorText.textContent = message;
+      errorMsg.classList.add('show');
+      card.classList.remove('shake');
+      void card.offsetWidth; // restart animation
+      card.classList.add('shake');
+      input.select();
+    }
+
+    function clearError(){
+      input.classList.remove('invalid');
+      errorText.textContent = '';
+      errorMsg.classList.remove('show');
+    }
+  </script>
+</body>
+</html>
