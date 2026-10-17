@@ -35,16 +35,17 @@
       radial-gradient(ellipse 70% 40% at 50% -5%, rgba(16,185,129,0.10), transparent 70%);
     background-repeat:no-repeat;
   }
-  .wrap{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
+  .wrap{ max-width:520px; margin:0 auto; padding:20px 20px 60px; }
 
   /* ---- Header ---- */
-  .head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
+  .topbar{ border-bottom:1px solid var(--ink-line); background:rgba(13,21,18,0.85); position:sticky; top:0; z-index:10; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  .topbar-in{ max-width:520px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
   .brand{ display:flex; align-items:center; gap:10px; }
   .brand-icon{
-    width:34px; height:34px; border-radius:10px; background:var(--emerald);
+    width:30px; height:30px; border-radius:9px; background:var(--emerald);
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
   }
-  .brand-icon svg{ width:19px; height:19px; color:var(--ink); }
+  .brand-icon svg{ width:17px; height:17px; color:var(--ink); }
   .brand-name{ font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:0.02em; }
   .credit-chip{
     display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
@@ -61,13 +62,6 @@
   .login-chip:active{ transform:scale(0.97); }
   .login-chip svg{ width:13px; height:13px; }
   .tagline{ color:var(--text-dim); font-size:13.5px; margin:0 0 22px; }
-  .tagline.has-note{ margin-bottom:10px; }
-  .guest-note{
-    display:flex; align-items:flex-start; gap:8px; margin:0 0 22px; padding:10px 12px;
-    font-size:12.5px; line-height:1.45; color:var(--text-dim);
-    background:var(--ink-soft); border:1px solid var(--ink-line); border-radius:12px;
-  }
-  .guest-note svg{ width:15px; height:15px; flex-shrink:0; margin-top:1px; color:var(--emerald); }
 
   /* ---- Filter chips ---- */
   .filters{
@@ -130,8 +124,8 @@
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="head">
+  <header class="topbar">
+    <div class="topbar-in">
       <div class="brand">
         <div class="brand-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>
@@ -147,11 +141,9 @@
         Masuk
       </a>
     </div>
+  </header>
+  <div class="wrap">
     <p class="tagline" id="tagline">Kumpulan tools kecil buat ngedit &amp; nyusun foto.</p>
-    <div class="guest-note" id="guestNote" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-      <span>Lihat-lihat dulu aja. Pas kamu ketuk salah satu tool, nanti diminta access key.</span>
-    </div>
 
     <div class="filters" id="filters">
       <button class="chip active" data-filter="all">Semua</button>
@@ -323,8 +315,6 @@
     guestApplied = true;
     chip.hidden = true;
     document.getElementById('loginChip').hidden = false;
-    document.getElementById('guestNote').hidden = false;
-    document.getElementById('tagline').classList.add('has-note');
     [].forEach.call(document.querySelectorAll('.tool-arrow'), function(a){ a.innerHTML = LOCK_SVG; });
   }
 
