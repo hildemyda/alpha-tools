@@ -86,7 +86,7 @@
   // ---- Baca file .plp ----
   async function handle(file) {
     err(''); releaseUrls(); P = null; $('#intro').hidden = false; $('#result').hidden = true;
-    if (typeof JSZip === 'undefined') return err('Pustaka ZIP gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.');
+    if (typeof JSZip === 'undefined') return err('Pustaka ZIP gagal dimuat. Muat ulang halaman, atau pastikan file jszip.min.js ikut terupload di folder bongkar-plp.');
     let zip; try { zip = await JSZip.loadAsync(file); } catch (e) { return err('File ini bukan arsip .plp yang valid. Pastikan kamu memilih file proyek Pixellab.'); }
     const names = Object.keys(zip.files).filter(n => !zip.files[n].dir);
     const plab = names.find(n => /(^|\/)data\.plab$/.test(n));
@@ -175,6 +175,8 @@
 
   let fi = 0;
   async function loadFont(g) { try { const n = 'pf' + (++fi), ff = new FontFace(n, g.bytes.slice().buffer); await ff.load(); document.fonts.add(ff); return n; } catch (e) { return null; } }
+  // Font dimuat sekali per berkas, hasilnya dipakai bersama tab Font dan Pratinjau.
+  function fontFamilyFor(g) { return g.ffp || (g.ffp = loadFont(g)); }
   function panelFonts(arr) {
     const w = el('div');
     w.appendChild(el('p', 'help', arr.length
@@ -184,7 +186,7 @@
       const c = el('article', 'fcard'); c.appendChild(el('b', null, g.fname + '.' + g.ext));
       c.appendChild(el('div', 'meta', kb(g.bytes.length)));
       const pv = el('div', 'fprev'), a = el('div', 'big', g.samples[0] || 'Aa Bb Cc'), b = el('div', 'sm', 'Aa Bb Cc Dd 0123456789'); pv.append(a, b); c.appendChild(pv);
-      loadFont(g).then(n => { if (n) { a.style.fontFamily = b.style.fontFamily = '"' + n + '"'; } else { b.textContent = 'Pratinjau tidak tersedia di perangkat ini.'; } });
+      fontFamilyFor(g).then(n => { if (n) { a.style.fontFamily = b.style.fontFamily = '"' + n + '"'; } else { b.textContent = 'Pratinjau tidak tersedia di perangkat ini.'; } });
       g.samples.forEach(s => chip(c, 'Dipakai di teks “' + s + '”'));
       c.appendChild(document.createElement('br'));
       c.appendChild(saveBtn('Simpan font', one(g)));
@@ -248,6 +250,107 @@
     w.appendChild(kv); return w;
   }
 
+  // ---- Pratinjau desain (perkiraan) ----
+  // Format koordinat .plp belum diverifikasi dengan file asli, jadi ini hasil
+  // perkiraan. Thumbnail asli ditampilkan di sebelahnya sebagai pembanding, dan
+  // mode posisi (tengah / kiri-atas) bisa diganti kalau letaknya terlihat geser.
+  const TEXT_COLOR_KEYS = ['textTextColor', 'textColor', 'textFillColor'];
+  const SHAPE_COLOR_KEYS = ['shapeColor', 'shapeFillColor'];
+  const numOf = (v, def) => { const n = parseFloat(v); return isFinite(n) ? n : def; };
+  let posMode = 'center';
+
+  function imgOf(g) {
+    return g.imgp || (g.imgp = new Promise(res => {
+      const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = url(g);
+    }));
+  }
+  function canvasSize(d) {
+    const w = numOf(d.bgWidth, 1), h = numOf(d.bgHeight, 1);
+    if (w > 10 && h > 10) return { w, h };
+    const base = 1080;
+    return w >= h ? { w: base, h: Math.round(base * h / w) } : { w: Math.round(base * w / h), h: base };
+  }
+  function colorOf(o, prefer) {
+    for (const k of prefer) if (/^-?\d+$/.test(String(o[k]))) return argb(Number(o[k])).css;
+    for (const k of Object.keys(o)) {
+      if (/color/i.test(k) && !/shadow|stroke|border|outline|bg|background/i.test(k) && /^-?\d+$/.test(String(o[k]))) return argb(Number(o[k])).css;
+    }
+    return null;
+  }
+
+  async function drawPreview(cv, mode) {
+    const { d, layers, bg } = P, S = canvasSize(d), k = Math.min(1, 2048 / Math.max(S.w, S.h));
+    cv.width = Math.max(1, Math.round(S.w * k)); cv.height = Math.max(1, Math.round(S.h * k));
+    const ctx = cv.getContext('2d'); ctx.setTransform(k, 0, 0, k, 0, 0);
+    ctx.fillStyle = argb(d.bgColor).css; ctx.fillRect(0, 0, S.w, S.h);
+
+    if (bg && MIME[bg.ext]) {
+      const im = await imgOf(bg);
+      if (im) {
+        const sc = Math.max(S.w / im.naturalWidth, S.h / im.naturalHeight), dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
+        ctx.save(); ctx.translate(S.w / 2, S.h / 2); ctx.rotate(numOf(d.bgRotation, 0) * Math.PI / 180);
+        ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh); ctx.restore();
+      }
+    }
+
+    // layers[0] = lapisan paling atas, jadi digambar dari belakang ke depan.
+    for (const L of layers.slice().reverse()) {
+      const o = L.o; if (o.objectHidden) continue;
+      ctx.save();
+      try {
+        const isText = L.text != null;
+        const w = numOf(o.shapeWidth, 0), h = numOf(o.shapeHeight, 0), x = numOf(o.shapeX, 0), y = numOf(o.shapeY, 0);
+        const cx = mode === 'center' ? x : x + w / 2, cy = mode === 'center' ? y : y + h / 2;
+        ctx.globalAlpha = Math.max(0, Math.min(1, numOf(isText ? o.textOpacity : o.shapeOpacity, 100) / 100));
+        ctx.translate(cx, cy); ctx.rotate(numOf(o.shapeRotation || o.textRotation, 0) * Math.PI / 180);
+        if (isText) {
+          const size = numOf(o.textTextSize, 40); let fam = 'sans-serif';
+          const f = (L.fonts || []).find(f => f.bytes);
+          if (f) { const n = await fontFamilyFor(f); if (n) fam = '"' + n + '"'; }
+          ctx.font = size + 'px ' + fam; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = colorOf(o, TEXT_COLOR_KEYS) || '#ffffff';
+          const lines = String(L.text).split('\n'), lh = size * 1.2;
+          lines.forEach((ln, i) => ctx.fillText(ln, 0, (i - (lines.length - 1) / 2) * lh));
+        } else if (L.img && MIME[L.img.ext]) {
+          const im = await imgOf(L.img);
+          if (im) { const dw = w || im.naturalWidth, dh = h || im.naturalHeight; ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh); }
+        } else if (w && h) {
+          const c = colorOf(o, SHAPE_COLOR_KEYS);
+          if (c) { ctx.fillStyle = c; ctx.fillRect(-w / 2, -h / 2, w, h); }
+        }
+      } catch (e) { /* satu lapisan gagal digambar, lanjut ke lapisan berikutnya */ }
+      ctx.restore();
+    }
+  }
+
+  function panelPreview() {
+    const w = el('div');
+    w.appendChild(el('p', 'help', 'Pratinjau perkiraan dari lapisan desainmu. Efek seperti bayangan, blend mode, dan gradasi belum ditampilkan, jadi bisa sedikit berbeda dari aslinya. Kalau letaknya terlihat geser, coba ganti mode posisi.'));
+
+    const seg = el('div', 'seg'), cv = el('canvas', 'pv-canvas');
+    const draw = () => drawPreview(cv, posMode).catch(() => { });
+    [['center', 'Posisi: tengah'], ['topleft', 'Posisi: kiri atas']].forEach(([m, label]) => {
+      const b = el('button', 'tab', label); b.setAttribute('aria-selected', m === posMode);
+      b.onclick = () => { posMode = m;[...seg.children].forEach(x => x.setAttribute('aria-selected', x === b)); draw(); };
+      seg.appendChild(b);
+    });
+    w.appendChild(seg);
+
+    const stage = el('div', 'pv-stage'); stage.appendChild(cv); w.appendChild(stage);
+    const acts = el('div', 'acts pv-acts');
+    acts.appendChild(saveBtn('Unduh PNG', () => {
+      cv.toBlob(b => { if (b) { download(b, (cleanName(P.name) || 'desain') + '-pratinjau.png'); toast('Berhasil diunduh'); } }, 'image/png');
+    }));
+    w.appendChild(acts);
+
+    if (posterUrl) {
+      w.appendChild(el('div', 'meta pv-cap', 'Thumbnail asli dari Pixellab (pembanding)'));
+      const im = el('img', 'pv-thumb'); im.src = posterUrl; im.alt = 'Thumbnail asli'; w.appendChild(im);
+    }
+    draw();
+    return w;
+  }
+
   // Kanvas bisa tersimpan sebagai rasio (mis. 1 × 1), bukan ukuran piksel.
   const sizeTxt = d => d.bgWidth > 10 && d.bgHeight > 10
     ? d.bgWidth + ' × ' + d.bgHeight + ' px'
@@ -261,7 +364,7 @@
     $('#stats').textContent = sizeTxt(d) + '. ' + layers.length + ' lapisan, ' + imgs.length + ' gambar, ' + fonts.length + ' font.';
     const po = $('#poster');
     if (thumb) { posterUrl = URL.createObjectURL(new Blob([thumb], { type: 'image/jpeg' })); po.src = posterUrl; po.hidden = false; } else po.hidden = true;
-    const defs = [['Gambar', imgs.length, () => panelImages(imgs)], ['Font', fonts.length + P.builtin.length, () => panelFonts(fonts)], ['Lapisan', layers.length, panelLayers], ['Kanvas', null, panelCanvas]];
+    const defs = [['Gambar', imgs.length, () => panelImages(imgs)], ['Font', fonts.length + P.builtin.length, () => panelFonts(fonts)], ['Pratinjau', null, panelPreview], ['Lapisan', layers.length, panelLayers], ['Kanvas', null, panelCanvas]];
     if (other.length) defs.push(['Lainnya', other.length, () => panelImages(other)]);
     const tabs = $('#tabs'), panels = $('#panels'); tabs.innerHTML = ''; panels.innerHTML = '';
     const bs = [], ps = [];

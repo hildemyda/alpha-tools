@@ -178,3 +178,18 @@ body{
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 .toast svg{ width:17px; height:17px; color:#5FD98A; flex-shrink:0; }
 #toastMsg{ overflow-wrap:anywhere; }
+
+/* ---- Pratinjau desain ---- */
+.seg{ display:flex; gap:6px; flex-wrap:wrap; margin:12px 0 4px; }
+.seg .tab{ min-height:36px; padding:7px 13px; font-size:12.5px; }
+.pv-stage{
+  margin-top:10px; border:1px solid var(--ink-line); border-radius:16px; overflow:hidden;
+  background:repeating-conic-gradient(var(--chk1) 0 25%, var(--chk2) 0 50%) 0 0/16px 16px;
+}
+.pv-canvas{ display:block; width:100%; height:auto; }
+.pv-acts{ margin-top:12px; }
+.pv-cap{ margin-top:18px; }
+.pv-thumb{
+  display:block; width:132px; max-width:50%; height:auto; margin-top:8px; border-radius:12px;
+  border:1px solid var(--ink-line); background:var(--ink-soft);
+}
