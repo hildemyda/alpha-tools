@@ -20,6 +20,10 @@ project/
 │   ├── index.html      ← app unduh foto/video dari Instagram
 │   ├── styles.css
 │   └── script.js
+├── ig-post/
+│   ├── index.html      ← app bikin tampilan postingan Instagram + frame story 9:16 (digambar di browser; ikon vektor, font Roboto dari Google Fonts)
+│   ├── styles.css
+│   └── script.js
 ├── remove-bg/
 │   ├── index.html      ← app hapus background foto (5 pilihan server)
 │   ├── styles.css
@@ -62,7 +66,8 @@ Beda dari versi sebelumnya (limit per-fitur terpisah), sekarang **1 key cuma pun
 export const FEATURES = {
   igdl:     { label: 'IG Downloader', cost: 1 },
   brat:     { label: 'Brat Maker',    cost: 1 },
-  removebg: { label: 'Remove BG',     cost: 0 }, // 0 = gratis, gak potong kredit
+  removebg: { label: 'Remove BG',     cost: 1 },
+  igpost:   { label: 'IG Post',       cost: 1 }, // 0 = gratis, gak potong kredit
 };
 ```
 - `cost: 0` → fitur itu **selalu gratis**, apapun sisa kreditnya (dipakai buat Remove BG sekarang).
@@ -108,7 +113,7 @@ Klik Deploy. Setelah selesai:
 
 ## Catatan
 - **Migrasi dari sistem lama**: kalau sebelumnya masih pakai `ACCESS_KEYS` (Environment Variable) ATAU versi limit-per-fitur (sebelum jadi kredit gabungan), semua itu sudah TIDAK dipakai lagi — semua key sekarang harus didaftarkan ulang lewat `/admin` dengan 1 angka limit kredit.
-- Fitur yang ikut sistem kredit sekarang: **IG Downloader** (cost 1) dan **Brat Maker** (cost 1). **Remove BG** sudah tersambung ke sistemnya juga tapi cost-nya di-set **0 (gratis)** — gampang diubah kapan aja lewat `lib/features.js`. Qolase & Round Foto murni jalan di browser, gak tersambung ke sistem kredit sama sekali.
+- Fitur yang ikut sistem kredit sekarang: **IG Downloader**, **Brat Maker**, **Remove BG**, dan **IG Post** (masing-masing cost 1). Biayanya gampang diubah kapan aja lewat `lib/features.js`. IG Post motong kredit pas tombol unduh dipencet (gambar dibuat dulu, kredit baru dipotong kalau berhasil). Qolase & Round Foto murni jalan di browser, gak tersambung ke sistem kredit sama sekali.
 - Kebijakan limit sekarang: **abis ya abis** sampai di-reset manual dari `/admin` (gak ada reset otomatis harian/bulanan).
 - **Akses**: menu awal (`/`) dan `/api/quota-status` bisa dibuka TANPA login (daftar `PUBLIC_PATHS` di `middleware.js`). Semua tool dan API lainnya tetap wajib access key; kalau belum login, pengguna diarahkan ke `/login.html` lalu dikembalikan ke tool yang dibuka. Tag Open Graph (preview link WhatsApp) ada di `index.html` dan `login.html`.
 - `/admin` dan `/api/admin/*` pakai cookie & password TERPISAH dari access key user biasa — orang yang cuma punya access key gak akan bisa masuk ke situ.

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IG Post — Alphools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/" aria-label="Kembali ke Alphools">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="topbar-brand">
+    <div class="topbar-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/></svg>
+    </div>
+    IG POST
+  </div>
+</div>
+
+<div class="hint-bar">
+  <span class="hint-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+  </span>
+  <span>Pilih foto · isi akun &amp; caption · unduh</span>
+</div>
+
+<div class="content">
+
+  <div class="prop-block">
+    <div class="section-label">Foto postingan</div>
+    <input type="file" id="photoInput" accept="image/*" hidden>
+    <button type="button" class="drop-btn" id="photoBtn">
+      <img id="photoThumb" alt="" hidden>
+      <span class="drop-text" id="photoText">Pilih foto</span>
+    </button>
+    <div class="avatar-row">
+      <input type="file" id="avatarInput" accept="image/*" hidden>
+      <button type="button" class="small-btn" id="avatarBtn">Foto profil (opsional)</button>
+      <button type="button" class="small-btn danger" id="avatarClear" hidden>Hapus</button>
+      <span class="avatar-note" id="avatarNote">Kosong = avatar inisial</span>
+    </div>
+  </div>
+
+  <div class="prop-block">
+    <div class="section-label">Akun &amp; caption</div>
+    <div class="user-field">
+      <span class="at">@</span>
+      <input type="text" id="userInput" placeholder="username.id" maxlength="30" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <textarea id="captionInput" placeholder="Tulis caption… #hashtag dan @mention otomatis biru" maxlength="500" rows="3"></textarea>
+  </div>
+
+  <div class="prop-block">
+    <div class="section-label-row">
+      <div class="section-label">Angka <span class="sub">(kosong = acak)</span></div>
+      <button type="button" class="small-btn" id="rerollBtn">Acak ulang</button>
+    </div>
+    <div class="num-grid">
+      <label>Likes<input type="text" inputmode="numeric" id="likesInput" placeholder="acak"></label>
+      <label>Komentar<input type="text" inputmode="numeric" id="commentsInput" placeholder="acak"></label>
+      <label>Repost<input type="text" inputmode="numeric" id="repostsInput" placeholder="acak"></label>
+      <label>Kirim<input type="text" inputmode="numeric" id="sendsInput" placeholder="acak"></label>
+    </div>
+  </div>
+
+  <div class="prop-block">
+    <div class="section-label">Gaya</div>
+    <div class="toggle-row">
+      <button type="button" class="toggle-chip" data-opt="dark">Dark</button>
+      <button type="button" class="toggle-chip" data-opt="verified">Verified</button>
+      <button type="button" class="toggle-chip" data-opt="story">Ring story</button>
+      <button type="button" class="toggle-chip" data-opt="like">Liked</button>
+      <button type="button" class="toggle-chip" data-opt="follow">Sembunyikan Ikuti</button>
+      <button type="button" class="toggle-chip active" data-opt="frame">Frame 9:16</button>
+      <button type="button" class="toggle-chip" data-opt="nobg" id="nobgChip">Transparan</button>
+    </div>
+  </div>
+
+  <div class="preview-wrap">
+    <div class="preview-label">PREVIEW</div>
+    <div class="stage-outer">
+      <canvas id="canvas" width="540" height="960"></canvas>
+      <div class="empty-hint" id="emptyHint">Pilih foto postingan dulu buat mulai</div>
+    </div>
+  </div>
+
+  <div class="quota-note" id="quotaNote"></div>
+
+  <button class="btn-download-main" id="downloadPngBtn" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+    Unduh PNG
+  </button>
+  <button class="ghost-btn" id="downloadJpgBtn" disabled>Unduh JPG (ukuran lebih kecil)</button>
+
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastMsg">Berhasil diunduh</span>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
